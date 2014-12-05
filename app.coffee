@@ -1,11 +1,16 @@
 fs = require('fs')
 xlsx = require 'node-xlsx'
 
-FILE_NAME = "pyrexdata"
+if process.argv[2]?
+	inputPath = process.argv[2]
+	if process.argv[3]?
+		outputPath = process.argv[3]
+	else
+		outputPath = inputPath.replace /\.json$/i, ".xlsx"
+else
+	throw "Error: No input file specified."
 
-
-filedata = fs.readFileSync 'pyrexdata.json', {encoding: 'utf8'}
-filedata = JSON.parse filedata
+filedata = require "./#{inputPath}"
 
 sheets = []
 
@@ -43,4 +48,5 @@ for table, rows of filedata
 
 buffer = xlsx.build sheets
 
-fs.writeFileSync "#{FILE_NAME}.xlsx", buffer
+fs.writeFileSync outputPath, buffer
+console.log "Written file:", outputPath
