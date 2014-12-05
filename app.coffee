@@ -1,36 +1,27 @@
 fs = require('fs')
-Iconv = require('iconv-lite')
-fastCsv = require 'fast-csv'
+xlsx = require 'node-xlsx'
+
+FILE_NAME = "pyrexdata"
+
+
 filedata = fs.readFileSync 'pyrexdata.json', {encoding: 'utf8'}
-
-Iconv.extendNodeEncodings()
-
 filedata = JSON.parse filedata
 
-SEPARATOR =";"
-DELIMITER = '"'
-
-escapeValue = (value)->
-	if typeof value is 'string'
-		value = value.replace DELIMITER, "#{DELIMITER}#{DELIMITER}", "g"
-	value
-	
+sheets = []
 
 for table, rows of filedata
 	console.log "table:", table
 	columns = []
-	csvString = ""
-
-	csvHeaders = ""
-
+	outputTable = []
+	
 	for row in rows
-		csvString += "\n"
+		outputRow = []
+
 		for column in columns
 			if row[column]?
-				value = escapeValue row[column]
-				csvString += "\"#{value}\""
-				delete row[column]
-			csvString += SEPARATOR
+				outputRow.push row[column]
+			else
+				outputRow.push null
 
 		for field, value of row
 			alreadyListed = false
@@ -38,16 +29,18 @@ for table, rows of filedata
 				if field is column
 					alreadyListed = true
 			if alreadyListed is false
-				console.log "column:", field
 				columns.push field
-				value = escapeValue value
-				csvString += "\"#{value}\""
-				csvString += SEPARATOR
+				outputRow.push value
+
+		outputTable.push outputRow
 
 
-	for column in columns
-		csvHeaders += "\"#{column}\"; "
+	outputTable.unshift columns
 
-	csvString = csvHeaders + csvString
+	sheets.push
+		name: table
+		data: outputTable
 
-	fs.writeFileSync "#{table}.csv", csvString, {encoding: "ISO-8859-1"}
+buffer = xlsx.build sheets
+
+fs.writeFileSync "#{FILE_NAME}.xlsx", buffer

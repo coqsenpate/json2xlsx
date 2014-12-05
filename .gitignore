@@ -1,4 +1,6 @@
 *.csv
 node_modules
 *.json
+!package.json
 *.xls
+*.xlsx
